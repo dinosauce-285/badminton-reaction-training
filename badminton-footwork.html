@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Badminton Footwork Trainer</title>
+<style>
+  :root{
+    --bg:#071428;
+    --size:140px;
+    --arrow-fill:#444;
+    --highlight:#00ff88;
+  }
+  html,body{
+    height:100%;margin:0;
+    background:linear-gradient(180deg,var(--bg),#031020);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    font-family:Arial,Helvetica,sans-serif;color:#dbeafe
+  }
+  .controls{margin-bottom:20px;}
+  .controls input{width:60px;text-align:center;font-size:18px;}
+  .controls button{font-size:18px;padding:5px 12px;margin-left:8px;cursor:pointer;}
+  .board{width:720px;height:720px;position:relative;}
+  .arrow{
+    position:absolute;width:var(--size);height:var(--size);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .2s ease,filter .18s ease;
+    --tx:translate(0,0);
+    transform:var(--tx);opacity:0.7;
+  }
+  .arrow.active{
+    transform:var(--tx) scale(1.25);
+    filter:drop-shadow(0 14px 30px rgba(0,255,136,0.18));
+    opacity:1;z-index:5;
+  }
+  .icon{width:78%;height:78%;}
+  .icon svg path{fill:var(--arrow-fill);transition:fill .18s ease,stroke .18s ease;}
+  .arrow.active .icon svg path{fill:var(--highlight);stroke:rgba(0,255,136,0.85);stroke-width:1;}
+  .up{top:6%;left:50%;--tx:translate(-50%,0);}
+  .down{bottom:6%;left:50%;--tx:translate(-50%,0);}
+  .left{left:6%;top:50%;--tx:translate(0,-50%);}
+  .right{right:6%;top:50%;--tx:translate(0,-50%);}
+  .up-left{top:12%;left:12%;--tx:translate(-50%,-50%);}
+  .up-right{top:12%;right:12%;--tx:translate(50%,-50%);}
+  .down-left{bottom:12%;left:12%;--tx:translate(-50%,50%);}
+  .down-right{bottom:12%;right:12%;--tx:translate(50%,50%);}
+  .up .icon{transform:rotate(0);}
+  .up-right .icon{transform:rotate(45deg);}
+  .right .icon{transform:rotate(90deg);}
+  .down-right .icon{transform:rotate(135deg);}
+  .down .icon{transform:rotate(180deg);}
+  .down-left .icon{transform:rotate(-135deg);}
+  .left .icon{transform:rotate(-90deg);}
+  .up-left .icon{transform:rotate(-45deg);}
+  @media(max-width:720px){
+    :root{--size:90px;}
+    .board{width:92vw;height:92vw;}
+  }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <label>Giây: <input type="number" id="seconds" value="5" min="1"></label>
+    <button id="startBtn">Bắt đầu</button>
+    <button id="stopBtn">Dừng</button>
+  </div>
+
+  <div class="board" id="board">
+    <div class="arrow up"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow up-right"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow right"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow down-right"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow down"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow down-left"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow left"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+    <div class="arrow up-left"><div class="icon"><svg viewBox="0 0 100 100"><path d="M50 10 L74 38 H58 V88 H42 V38 H26 Z"/></svg></div></div>
+  </div>
+
+<script>
+  const arrows = Array.from(document.querySelectorAll('.arrow'));
+  let last = -1, intervalId = null;
+
+  function playBeep(){
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 900; // tần số bíp
+      gain.gain.value = 0.08;
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start();
+      setTimeout(()=>{ osc.stop(); ctx.close(); }, 100);
+    } catch(e) {}
+  }
+
+  function highlightRandom(){
+    arrows.forEach(a=>a.classList.remove('active'));
+    let idx;
+    do{ idx = Math.floor(Math.random()*arrows.length); }while(arrows.length>1 && idx===last);
+    arrows[idx].classList.add('active');
+    last = idx;
+    playBeep();
+    if(navigator.vibrate) navigator.vibrate(60);
+  }
+
+  function start(){
+    stop();
+    const sec = parseInt(document.getElementById('seconds').value)||5;
+    highlightRandom();
+    intervalId = setInterval(highlightRandom, sec*1000);
+  }
+  function stop(){
+    if(intervalId){ clearInterval(intervalId); intervalId=null; }
+    arrows.forEach(a=>a.classList.remove('active'));
+  }
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('stopBtn').addEventListener('click', stop);
+</script>
+</body>
+</html>
